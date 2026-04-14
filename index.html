@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电子木鱼 - 积功德</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #D4A574;
+            --bg-color: #F5E6D3;
+            --text-color: #5C4033;
+            --accent-color: #8B6914;
+        }
+
+        /* 主题：禅意黑 */
+        .theme-dark {
+            --primary-color: #4A4A4A;
+            --bg-color: #1a1a1a;
+            --text-color: #E0E0E0;
+            --accent-color: #FFD700;
+        }
+
+        /* 主题：清新白 */
+        .theme-light {
+            --primary-color: #E8E8E8;
+            --bg-color: #FFFFFF;
+            --text-color: #333333;
+            --accent-color: #4CAF50;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            overflow-x: hidden;
+            padding: 20px 10px;
+        }
+
+        .container {
+            text-align: center;
+            padding: 20px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: var(--accent-color);
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.15), 0 0 20px rgba(0,0,0,0.1);
+            letter-spacing: 3px;
+            font-weight: 700;
+            animation: titleFloat 4s ease-in-out infinite;
+        }
+
+        @keyframes titleFloat {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        /* 功德计数器 */
+        .counter-display {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 30px 0;
+            color: var(--accent-color);
+            text-shadow: 0 0 15px rgba(0,0,0,0.15), 2px 2px 4px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: counterGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes counterGlow {
+            0%, 100% {
+                filter: brightness(1);
+            }
+            50% {
+                filter: brightness(1.1);
+            }
+        }
+
+        .counter-label {
+            font-size: 1rem;
+            opacity: 0.8;
+            margin-bottom: 8px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* 木鱼容器 */
+        .muyu-container {
+            position: relative;
+            margin: 40px auto;
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            padding: 20px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .muyu-container:hover {
+            transform: scale(1.02);
+        }
+
+        .muyu-container:active {
+            transform: scale(0.98);
+        }
+
+        /* 木鱼图形 */
+        .muyu {
+            width: 220px;
+            height: 220px;
+            margin: 0 auto;
+            position: relative;
+            transition: transform 0.1s ease;
+            filter: drop-shadow(0 15px 30px rgba(0,0,0,0.25));
+        }
+
+        .muyu svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 点击动画 */
+        .muyu.clicked {
+            animation: muyuPress 0.15s ease;
+        }
+
+        @keyframes muyuPress {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.9); }
+            100% { transform: scale(1); }
+        }
+
+        /* 浮动文字 */
+        .floating-text {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            transform: translateX(-50%);
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: var(--accent-color);
+            pointer-events: none;
+            animation: floatUp 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            white-space: nowrap;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.2), 0 0 15px rgba(255,255,255,0.5);
+            z-index: 100;
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0) scale(1);
+            }
+            50% {
+                opacity: 0.8;
+                transform: translateX(-50%) translateY(-60px) scale(1.1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-120px) scale(0.9);
+            }
+        }
+
+        /* 控制面板 */
+        .controls {
+            margin-top: 40px;
+            display: grid;
+            gap: 20px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .control-group {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+
+        .control-group:hover {
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .control-label {
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        /* 按钮样式 */
+        button {
+            background: var(--primary-color);
+            color: var(--text-color);
+            border: 2px solid var(--accent-color);
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        button:hover {
+            background: var(--accent-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* 开关样式 */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 30px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--accent-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(30px);
+        }
+
+        /* 输入框样式 */
+        input[type="text"], input[type="number"] {
+            padding: 8px 12px;
+            border: 2px solid var(--primary-color);
+            border-radius: 20px;
+            background: rgba(255,255,255,0.9);
+            color: var(--text-color);
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus {
+            border-color: var(--accent-color);
+        }
+
+        /* 主题选择器 */
+        .theme-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .theme-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .theme-btn.active {
+            border-color: var(--accent-color);
+            transform: scale(1.1);
+        }
+
+        .theme-traditional { background: linear-gradient(135deg, #D4A574, #F5E6D3); }
+        .theme-dark-btn { background: linear-gradient(135deg, #4A4A4A, #1a1a1a); }
+        .theme-light-btn { background: linear-gradient(135deg, #E8E8E8, #FFFFFF); }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            h1 { font-size: 2rem; }
+            .counter-display { font-size: 2.5rem; margin: 20px 0; }
+            .muyu { width: 180px; height: 180px; }
+            .floating-text { font-size: 1.3rem; }
+            
+            .controls {
+                gap: 15px;
+                padding: 0 10px;
+            }
+            
+            button {
+                padding: 8px 16px;
+                font-size: 0.85rem;
+            }
+
+            .control-group {
+                padding: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 { font-size: 1.8rem; }
+            .counter-display { font-size: 2rem; margin: 15px 0; }
+            .muyu { width: 150px; height: 150px; }
+            .floating-text { font-size: 1.1rem; }
+            
+            .container {
+                padding: 15px;
+            }
+
+            .controls {
+                gap: 12px;
+            }
+            
+            button {
+                padding: 7px 14px;
+                font-size: 0.8rem;
+                margin: 3px;
+            }
+
+            .control-label {
+                font-size: 0.85rem;
+            }
+
+            input[type="text"], input[type="number"] {
+                padding: 6px 10px;
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (max-width: 360px) {
+            h1 { font-size: 1.6rem; }
+            .counter-display { font-size: 1.8rem; }
+            .muyu { width: 130px; height: 130px; }
+            
+            button {
+                padding: 6px 12px;
+                font-size: 0.75rem;
+            }
+        }
+
+        /* 超大屏幕优化 */
+        @media (min-width: 1200px) {
+            .muyu {
+                width: 260px;
+                height: 260px;
+            }
+
+            .container {
+                max-width: 700px;
+            }
+        }
+
+        /* 自动敲击指示器 */
+        .auto-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ff4444;
+            margin-left: 10px;
+            animation: pulse 1s infinite;
+        }
+
+        .auto-indicator.active {
+            background: #44ff44;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🪵 电子木鱼</h1>
+        
+        <!-- 功德计数器 -->
+        <div class="counter-display">
+            <div class="counter-label">当前功德</div>
+            <span id="meritCount">0</span>
+        </div>
+
+        <!-- 木鱼主体 -->
+        <div class="muyu-container" id="muyuContainer">
+            <div class="muyu" id="muyu">
+                <svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <!-- 渐变定义 -->
+                        <radialGradient id="woodGradient" cx="40%" cy="35%" r="60%">
+                            <stop offset="0%" style="stop-color:var(--primary-color);stop-opacity:1" />
+                            <stop offset="50%" style="stop-color:var(--primary-color);stop-opacity:0.9" />
+                            <stop offset="100%" style="stop-color:var(--accent-color);stop-opacity:0.7" />
+                        </radialGradient>
+                        
+                        <linearGradient id="handleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:var(--primary-color);stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:var(--accent-color);stop-opacity:0.8" />
+                        </linearGradient>
+                        
+                        <!-- 阴影滤镜 -->
+                        <filter id="innerShadow" x="-20%" y="-20%" width="140%" height="140%">
+                            <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur"/>
+                            <feOffset dx="2" dy="3"/>
+                            <feComposite in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1"/>
+                            <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.3 0"/>
+                            <feBlend in2="SourceGraphic" mode="normal"/>
+                        </filter>
+                    </defs>
+                    
+                    <!-- 木鱼主体 - 更圆润的形状 -->
+                    <ellipse cx="120" cy="145" rx="90" ry="68" fill="url(#woodGradient)" stroke="var(--accent-color)" stroke-width="2.5" filter="url(#innerShadow)"/>
+                    
+                    <!-- 木鱼开口 - 更自然的弧度 -->
+                    <path d="M 45 145 Q 120 95 195 145" fill="none" stroke="var(--accent-color)" stroke-width="3.5" stroke-linecap="round" opacity="0.9"/>
+                    
+                    <!-- 内部阴影效果 -->
+                    <path d="M 50 145 Q 120 100 190 145" fill="none" stroke="var(--accent-color)" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+                    
+                    <!-- 木纹装饰 - 更自然 -->
+                    <circle cx="85" cy="135" r="2.5" fill="var(--accent-color)" opacity="0.5"/>
+                    <circle cx="155" cy="135" r="2.5" fill="var(--accent-color)" opacity="0.5"/>
+                    <circle cx="120" cy="125" r="2.5" fill="var(--accent-color)" opacity="0.5"/>
+                    <circle cx="100" cy="145" r="2" fill="var(--accent-color)" opacity="0.4"/>
+                    <circle cx="140" cy="145" r="2" fill="var(--accent-color)" opacity="0.4"/>
+                    
+                    <!-- 高光效果 -->
+                    <ellipse cx="100" cy="130" rx="25" ry="15" fill="white" opacity="0.15" transform="rotate(-10 100 130)"/>
+                    
+                    <!-- 木鱼把手 - 更精致 -->
+                    <rect x="102" y="62" width="36" height="24" rx="8" fill="url(#handleGradient)" stroke="var(--accent-color)" stroke-width="2"/>
+                    
+                    <!-- 把手纹理 -->
+                    <line x1="108" y1="68" x2="132" y2="68" stroke="var(--accent-color)" stroke-width="1.5" opacity="0.6" stroke-linecap="round"/>
+                    <line x1="108" y1="74" x2="132" y2="74" stroke="var(--accent-color)" stroke-width="1.5" opacity="0.6" stroke-linecap="round"/>
+                    <line x1="108" y1="80" x2="132" y2="80" stroke="var(--accent-color)" stroke-width="1.5" opacity="0.6" stroke-linecap="round"/>
+                    
+                    <!-- 把手顶部装饰 -->
+                    <circle cx="120" cy="62" r="4" fill="var(--accent-color)" opacity="0.7"/>
+                    
+                    <!-- 底部支撑点 -->
+                    <ellipse cx="80" cy="208" rx="8" ry="4" fill="var(--accent-color)" opacity="0.3"/>
+                    <ellipse cx="160" cy="208" rx="8" ry="4" fill="var(--accent-color)" opacity="0.3"/>
+                </svg>
+            </div>
+        </div>
+
+        <!-- 控制面板 -->
+        <div class="controls">
+            <!-- 自动敲击控制 -->
+            <div class="control-group">
+                <div class="control-label">
+                    自动敲击
+                    <span class="auto-indicator" id="autoIndicator"></span>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="autoToggle">
+                    <span class="slider"></span>
+                </label>
+                <div style="margin-top: 10px;">
+                    <input type="number" id="autoSpeed" value="1000" min="100" max="5000" step="100" style="width: 80px;">
+                    <span>毫秒/次</span>
+                </div>
+            </div>
+
+            <!-- 点击模式切换 -->
+            <div class="control-group">
+                <div class="control-label">点击模式</div>
+                <div style="display: flex; gap: 15px; align-items: center; justify-content: center; margin-bottom: 10px;">
+                    <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input type="radio" name="clickMode" value="add" checked onchange="changeClickMode('add')" style="margin-right: 5px;">
+                        <span>增加功德</span>
+                    </label>
+                    <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input type="radio" name="clickMode" value="subtract" onchange="changeClickMode('subtract')" style="margin-right: 5px;">
+                        <span>减少烦恼</span>
+                    </label>
+                </div>
+                <button onclick="resetMerit()" style="width: 100%;">重置计数器</button>
+            </div>
+
+            <!-- 自定义文字 -->
+            <div class="control-group">
+                <div class="control-label">自定义浮现文字</div>
+                <input type="text" id="customText" value="功德 +1" placeholder="输入自定义文字">
+            </div>
+
+            <!-- 主题选择 -->
+            <div class="control-group">
+                <div class="control-label">主题颜色</div>
+                <div class="theme-selector">
+                    <div class="theme-btn theme-traditional active" onclick="changeTheme('traditional')" title="传统黄"></div>
+                    <div class="theme-btn theme-dark-btn" onclick="changeTheme('dark')" title="禅意黑"></div>
+                    <div class="theme-btn theme-light-btn" onclick="changeTheme('light')" title="清新白"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 游戏状态
+        let meritCount = 0;
+        let autoKnocking = false;
+        let autoInterval = null;
+        let customFloatingText = "功德 +1";
+        let clickMode = 'add'; // 'add' or 'subtract'
+
+        // DOM 元素
+        const muyuContainer = document.getElementById('muyuContainer');
+        const muyu = document.getElementById('muyu');
+        const meritDisplay = document.getElementById('meritCount');
+        const autoToggle = document.getElementById('autoToggle');
+        const autoSpeed = document.getElementById('autoSpeed');
+        const customTextInput = document.getElementById('customText');
+        const autoIndicator = document.getElementById('autoIndicator');
+
+        // 木鱼音效 (Base64编码的简短木鱼声音)
+        const muyuSound = new Audio();
+        muyuSound.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVWo62rhm1tXH+jrrB8bXF0o6yueWltbJ6sqHdpamqcrKd3aWpqnKynd2lqapytp3dpamqcrKd3aWpqnKynd2lqapytp3dpamqcrKd3aWpqnKynd2lqapytp3dpamqcrKd3aWpqnKynd2lqapytp3dpamqcrKd3';
+
+        // 初始化
+        function init() {
+            loadSettings();
+            updateDisplay();
+            setupEventListeners();
+        }
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 木鱼点击事件
+            muyuContainer.addEventListener('click', handleMuyuClick);
+            
+            // 触摸设备支持
+            muyuContainer.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                handleMuyuClick(e);
+            });
+
+            // 自动敲击开关
+            autoToggle.addEventListener('change', toggleAutoKnock);
+            
+            // 自动敲击速度
+            autoSpeed.addEventListener('change', updateAutoSpeed);
+            
+            // 自定义文字
+            customTextInput.addEventListener('input', function(e) {
+                customFloatingText = e.target.value || "功德 +1";
+                saveSettings();
+            });
+
+            // 键盘空格键支持
+            document.addEventListener('keydown', function(e) {
+                if (e.code === 'Space') {
+                    e.preventDefault();
+                    handleMuyuClick();
+                }
+            });
+        }
+
+        // 处理木鱼点击
+        function handleMuyuClick(e) {
+            // 播放音效
+            playSound();
+            
+            // 根据模式增减功德
+            if (clickMode === 'add') {
+                meritCount++;
+            } else {
+                meritCount--;
+            }
+            updateDisplay();
+            
+            // 木鱼动画
+            animateMuyu();
+            
+            // 显示浮动文字
+            showFloatingText(e);
+            
+            // 保存设置
+            saveSettings();
+        }
+
+        // 播放音效
+        function playSound() {
+            // 克隆音频以支持快速连续播放
+            const soundClone = muyuSound.cloneNode();
+            soundClone.volume = 0.3;
+            soundClone.play().catch(e => console.log('音频播放失败:', e));
+        }
+
+        // 木鱼动画
+        function animateMuyu() {
+            muyu.classList.remove('clicked');
+            // 强制重绘
+            void muyu.offsetWidth;
+            muyu.classList.add('clicked');
+            
+            // 动画结束后移除类
+            setTimeout(() => {
+                muyu.classList.remove('clicked');
+            }, 150);
+        }
+
+        // 显示浮动文字
+        function showFloatingText(e) {
+            const floatingText = document.createElement('div');
+            floatingText.className = 'floating-text';
+            floatingText.textContent = customFloatingText;
+            
+            // 如果有点击事件，使用点击位置；否则使用中心位置
+            if (e && e.clientX) {
+                const rect = muyuContainer.getBoundingClientRect();
+                floatingText.style.left = (e.clientX - rect.left) + 'px';
+                floatingText.style.top = (e.clientY - rect.top - 50) + 'px';
+            } else {
+                floatingText.style.left = '50%';
+                floatingText.style.top = '0px';
+            }
+            
+            muyuContainer.appendChild(floatingText);
+            
+            // 动画结束后移除元素
+            setTimeout(() => {
+                if (floatingText.parentNode) {
+                    floatingText.parentNode.removeChild(floatingText);
+                }
+            }, 1000);
+        }
+
+        // 切换自动敲击
+        function toggleAutoKnock() {
+            autoKnocking = autoToggle.checked;
+            
+            if (autoKnocking) {
+                startAutoKnock();
+                autoIndicator.classList.add('active');
+            } else {
+                stopAutoKnock();
+                autoIndicator.classList.remove('active');
+            }
+            
+            saveSettings();
+        }
+
+        // 开始自动敲击
+        function startAutoKnock() {
+            const speed = parseInt(autoSpeed.value) || 1000;
+            autoInterval = setInterval(() => {
+                handleMuyuClick();
+            }, speed);
+        }
+
+        // 停止自动敲击
+        function stopAutoKnock() {
+            if (autoInterval) {
+                clearInterval(autoInterval);
+                autoInterval = null;
+            }
+        }
+
+        // 更新自动敲击速度
+        function updateAutoSpeed() {
+            if (autoKnocking) {
+                stopAutoKnock();
+                startAutoKnock();
+            }
+            saveSettings();
+        }
+
+        // 切换点击模式
+        function changeClickMode(mode) {
+            clickMode = mode;
+            
+            // 自动更新默认文字
+            if (mode === 'add') {
+                if (customTextInput.value === '烦恼 -1') {
+                    customTextInput.value = '功德 +1';
+                    customFloatingText = '功德 +1';
+                }
+            } else {
+                if (customTextInput.value === '功德 +1') {
+                    customTextInput.value = '烦恼 -1';
+                    customFloatingText = '烦恼 -1';
+                }
+            }
+            
+            saveSettings();
+        }
+
+        // 重置功德值
+        function resetMerit() {
+            meritCount = 0;
+            updateDisplay();
+            saveSettings();
+        }
+
+        // 更新显示
+        function updateDisplay() {
+            meritDisplay.textContent = meritCount;
+        }
+
+        // 切换主题
+        function changeTheme(theme) {
+            document.body.className = '';
+            
+            // 移除所有主题按钮的active类
+            document.querySelectorAll('.theme-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            switch(theme) {
+                case 'dark':
+                    document.body.classList.add('theme-dark');
+                    document.querySelector('.theme-dark-btn').classList.add('active');
+                    break;
+                case 'light':
+                    document.body.classList.add('theme-light');
+                    document.querySelector('.theme-light-btn').classList.add('active');
+                    break;
+                default:
+                    document.querySelector('.theme-traditional').classList.add('active');
+            }
+            
+            saveSettings();
+        }
+
+        // 保存设置到localStorage
+        function saveSettings() {
+            const settings = {
+                meritCount: meritCount,
+                autoKnocking: autoKnocking,
+                autoSpeed: autoSpeed.value,
+                customText: customTextInput.value,
+                theme: document.body.className || 'traditional',
+                clickMode: clickMode
+            };
+            localStorage.setItem('muyuSettings', JSON.stringify(settings));
+        }
+
+        // 加载设置
+        function loadSettings() {
+            const saved = localStorage.getItem('muyuSettings');
+            if (saved) {
+                try {
+                    const settings = JSON.parse(saved);
+                    meritCount = settings.meritCount || 0;
+                    autoKnocking = settings.autoKnocking || false;
+                    autoSpeed.value = settings.autoSpeed || 1000;
+                    customTextInput.value = settings.customText || "功德 +1";
+                    customFloatingText = settings.customText || "功德 +1";
+                    clickMode = settings.clickMode || 'add';
+                    
+                    // 恢复点击模式单选按钮
+                    const radioButtons = document.querySelectorAll('input[name="clickMode"]');
+                    radioButtons.forEach(radio => {
+                        radio.checked = (radio.value === clickMode);
+                    });
+                    
+                    // 恢复主题
+                    if (settings.theme) {
+                        const theme = settings.theme.replace('theme-', '') || 'traditional';
+                        changeTheme(theme);
+                    }
+                    
+                    // 恢复自动敲击状态
+                    autoToggle.checked = autoKnocking;
+                    if (autoKnocking) {
+                        startAutoKnock();
+                        autoIndicator.classList.add('active');
+                    }
+                } catch (e) {
+                    console.log('加载设置失败:', e);
+                }
+            }
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', init);
+
+        // 页面卸载时清理
+        window.addEventListener('beforeunload', () => {
+            stopAutoKnock();
+        });
+    </script>
+</body>
+</html>
