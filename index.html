@@ -34,6 +34,18 @@
             --accent-color: #4CAF50;
         }
 
+        /* 禅意黑主题下的输入框优化 */
+        .theme-dark input[type="text"],
+        .theme-dark input[type="number"] {
+            background: rgba(255,255,255,0.95);
+            color: #1a1a1a;
+        }
+
+        .theme-dark input[type="text"]:focus,
+        .theme-dark input[type="number"]:focus {
+            background: rgba(255,255,255,1);
+        }
+
         body {
             font-family: 'Microsoft YaHei', 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
             background: var(--bg-color);
@@ -229,7 +241,7 @@
 
         button:hover {
             background: var(--accent-color);
-            color: white;
+            color: #FFFFFF;
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
@@ -288,10 +300,10 @@
         /* 输入框样式 */
         input[type="text"], input[type="number"] {
             padding: 8px 12px;
-            border: 2px solid var(--primary-color);
+            border: 2px solid var(--accent-color);
             border-radius: 20px;
             background: rgba(255,255,255,0.9);
-            color: var(--text-color);
+            color: #333333;
             font-size: 0.9rem;
             outline: none;
             transition: border-color 0.3s;
@@ -299,6 +311,7 @@
 
         input[type="text"]:focus, input[type="number"]:focus {
             border-color: var(--accent-color);
+            background: rgba(255,255,255,1);
         }
 
         /* 主题选择器 */
@@ -510,8 +523,8 @@
                     <span class="slider"></span>
                 </label>
                 <div style="margin-top: 10px;">
-                    <input type="number" id="autoSpeed" value="1000" min="100" max="5000" step="100" style="width: 80px;">
-                    <span>毫秒/次</span>
+                    <input type="number" id="autoSpeed" value="500" min="200" max="5000" step="100" style="width: 80px;">
+                    <span>毫秒/次 (最快200ms)</span>
                 </div>
             </div>
 
@@ -554,7 +567,6 @@
         let meritCount = 0;
         let autoKnocking = false;
         let autoInterval = null;
-        let customFloatingText = "功德 +1";
         let clickMode = 'add'; // 'add' or 'subtract'
 
         // DOM 元素
@@ -592,11 +604,17 @@
             autoToggle.addEventListener('change', toggleAutoKnock);
             
             // 自动敲击速度
-            autoSpeed.addEventListener('change', updateAutoSpeed);
+            autoSpeed.addEventListener('change', function() {
+                // 限制最小值为200ms
+                if (parseInt(autoSpeed.value) < 200) {
+                    autoSpeed.value = 200;
+                }
+                updateAutoSpeed();
+            });
             
-            // 自定义文字
+            // 自定义文字输入 - 实时同步
             customTextInput.addEventListener('input', function(e) {
-                customFloatingText = e.target.value || "功德 +1";
+                // 不再需要单独维护 customFloatingText，直接使用 input.value
                 saveSettings();
             });
 
@@ -614,12 +632,24 @@
             // 播放音效
             playSound();
             
-            // 根据模式增减功德
-            if (clickMode === 'add') {
-                meritCount++;
-            } else {
-                meritCount--;
+            // 解析自定义文字中的数值
+            const text = customTextInput.value || (clickMode === 'add' ? '功德 +1' : '烦恼 -1');
+            const match = text.match(/([+-]?)(\d+)/);
+            let amount = 1;
+            
+            if (match) {
+                amount = parseInt(match[2]);
+                // 如果文字中有负号，amount 为负数
+                if (match[1] === '-') {
+                    amount = -amount;
+                }
             }
+            
+            // 根据模式应用数值
+            // 增加模式：直接加上解析出的数值（+1, +5, +10等）
+            // 减少模式：直接加上解析出的数值（-1, -3, -5等）
+            meritCount += amount;
+            
             updateDisplay();
             
             // 木鱼动画
@@ -657,7 +687,8 @@
         function showFloatingText(e) {
             const floatingText = document.createElement('div');
             floatingText.className = 'floating-text';
-            floatingText.textContent = customFloatingText;
+            // 始终使用输入框的最新值
+            floatingText.textContent = customTextInput.value || (clickMode === 'add' ? '功德 +1' : '烦恼 -1');
             
             // 如果有点击事件，使用点击位置；否则使用中心位置
             if (e && e.clientX) {
@@ -671,12 +702,12 @@
             
             muyuContainer.appendChild(floatingText);
             
-            // 动画结束后移除元素
+            // 动画结束后移除元素（与CSS动画时间一致）
             setTimeout(() => {
                 if (floatingText.parentNode) {
                     floatingText.parentNode.removeChild(floatingText);
                 }
-            }, 1000);
+            }, 1200);
         }
 
         // 切换自动敲击
@@ -696,7 +727,12 @@
 
         // 开始自动敲击
         function startAutoKnock() {
-            const speed = parseInt(autoSpeed.value) || 1000;
+            let speed = parseInt(autoSpeed.value) || 500;
+            // 限制最小间隔为200ms，防止卡顿
+            if (speed < 200) {
+                speed = 200;
+                autoSpeed.value = 200;
+            }
             autoInterval = setInterval(() => {
                 handleMuyuClick();
             }, speed);
@@ -723,16 +759,19 @@
         function changeClickMode(mode) {
             clickMode = mode;
             
-            // 自动更新默认文字
+            // 自动更新默认文字（仅在用户未自定义时）
+            const defaultAddText = '功德 +1';
+            const defaultSubtractText = '烦恼 -1';
+            
             if (mode === 'add') {
-                if (customTextInput.value === '烦恼 -1') {
-                    customTextInput.value = '功德 +1';
-                    customFloatingText = '功德 +1';
+                // 如果当前是默认减少文字或为空，切换为默认增加文字
+                if (customTextInput.value === defaultSubtractText || customTextInput.value === '') {
+                    customTextInput.value = defaultAddText;
                 }
             } else {
-                if (customTextInput.value === '功德 +1') {
-                    customTextInput.value = '烦恼 -1';
-                    customFloatingText = '烦恼 -1';
+                // 如果当前是默认增加文字或为空，切换为默认减少文字
+                if (customTextInput.value === defaultAddText || customTextInput.value === '') {
+                    customTextInput.value = defaultSubtractText;
                 }
             }
             
@@ -799,7 +838,6 @@
                     autoKnocking = settings.autoKnocking || false;
                     autoSpeed.value = settings.autoSpeed || 1000;
                     customTextInput.value = settings.customText || "功德 +1";
-                    customFloatingText = settings.customText || "功德 +1";
                     clickMode = settings.clickMode || 'add';
                     
                     // 恢复点击模式单选按钮
